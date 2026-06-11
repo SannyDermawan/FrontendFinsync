@@ -5,6 +5,7 @@ import React, {
 
 import Sidebar from "../components/Sidebar";
 
+
 export default function Settings({
   user,
   setUser,
@@ -24,22 +25,27 @@ export default function Settings({
   const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(0);
   const [profile, setProfile] = useState({
-  firstName: user.first_name || "",
-  lastName: user.last_name || "",
-  nickname: user.nickname || "",
-  gender: user.gender || "male",
-  language: user.language || "en"
-  });
+  firstName: user?.first_name || "",
+  lastName: user?.last_name || "",
+  nickname: user?.nickname || "",
+  gender: user?.gender || "male",
+  language: user?.language || "en"
+});
   const [connections, setConnections] = useState([]);
 
   useEffect(() => {
-  fetch(`http://127.0.0.1:8000/api/wallet-status/${user.id}`)
+
+  if (!user) return;
+
+  fetch(
+    `http://127.0.0.1:8000/api/wallet-status/${user.id}`
+  )
     .then(res => res.json())
     .then(data => {
-      console.log("CONNECTIONS:", data);
       setConnections(data);
     });
-  }, []);
+
+}, [user]);
 
   useEffect(() => {
 
@@ -81,8 +87,17 @@ export default function Settings({
   }
 
   function connectWallet(type) {
-    setConfirmWallet(type);
+
+  if (type === "ovo") {
+    window.location.href =
+      `http://localhost/ovo/?redirect=http://localhost:3000&user_id=${user.id}`;
   }
+
+  if (type === "dana") {
+    window.location.href =
+      `http://localhost/dana/?redirect=http://localhost:3000&user_id=${user.id}`;
+  }
+}
 
   function confirmWalletAction() {
     if (confirmWallet === "ovo") window.location.href = `http://localhost/ovo/?redirect=http://localhost:3000`;
@@ -613,12 +628,7 @@ export default function Settings({
         </div>
       </main>
 
-      {/* <ConfirmWalletModal
-        open={!!confirmWallet}
-        walletName={confirmWallet}
-        onClose={() => setConfirmWallet(null)}
-        onConfirm={confirmWalletAction}
-      /> */}
+    
     </div>
   );
 }

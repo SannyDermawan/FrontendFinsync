@@ -216,40 +216,64 @@ function ResetPage({ onNavigate }) {
 
 // ===== APP ROOT =====
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+  const savedUser = localStorage.getItem("user");
+
+  return savedUser
+    ? JSON.parse(savedUser)
+    : null;
+});
 
   useEffect(() => { 
   const u = JSON.parse(localStorage.getItem("user"));
-
-  if (u) {
-    setUser(u);
-  }
 
   const params = new URLSearchParams(window.location.search);
   const connected = params.get("connected");
   const wallet_id = params.get("wallet_id");
 
-if (connected === "ovo") {
+  if (connected && wallet_id) {
 
-  const wallet_id = params.get("wallet_id");
+  localStorage.setItem(
+    "pending_wallet",
+    JSON.stringify({
+      connected,
+      wallet_id
+    })
+  );
+
+}
+
+if (connected === "ovo" && u) {
 
   alert("OVO berhasil terhubung ✅");
 
-  fetch("http://127.0.0.1:8000/api/connect-wallet", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      user_id: u.id,
-      wallet_id: wallet_id
-    })
+  fetch(
+    "http://127.0.0.1:8000/api/connect-wallet",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        user_id: u.id,
+        wallet_id: wallet_id
+      })
+    }
+  )
+  .then(res => res.json())
+  .then(data => {
+
+    console.log("OVO CONNECTED:", data);
+
+    window.location.href = "/";
+  })
+  .catch(err => {
+    console.error("OVO ERROR:", err);
   });
 
-  window.location.href = "/";
 }
 
-if (connected === "dana") {
+if (connected === "dana" && u) {
 
   fetch(
     "http://127.0.0.1:8000/api/connect-wallet",
@@ -353,6 +377,15 @@ return (
       )
     }
   />
+
+    <Route
+  path="/"
+  element={
+    user
+      ? <Navigate to="/dashboard" />
+      : <Navigate to="/login" />
+  }
+/>
 
     <Route
       path="*"
